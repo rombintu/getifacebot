@@ -1,0 +1,9 @@
+[Unit]
+Description=Get my ifnterfaces every hour bot
+
+[Service]
+ExecStart=/opt/getifacebot/dist/getifacebot --token TOKEN --id CHAT_ID
+ExecStop=/bin/kill -15 $MAINPID
+
+[Install]
+WantedBy=multi-user.target
