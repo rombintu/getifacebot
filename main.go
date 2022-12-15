@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"reflect"
 	"time"
 
 	gocron "github.com/go-co-op/gocron"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-var MEMORY map[string][]string = make(map[string][]string)
+var MEMORY string
 
 func GetIfeces() (map[string][]string, error) {
 	ifaces, err := net.Interfaces()
@@ -37,15 +36,7 @@ func GetIfeces() (map[string][]string, error) {
 }
 
 func formatAddr(addrs map[string][]string) string {
-	buff := ""
-	for ifcace, addr := range addrs {
-		buff += fmt.Sprintf("%s:\n\t", ifcace)
-		for _, a := range addr {
-			buff += a + "\n\t"
-		}
-		buff += "\n"
-	}
-	return buff
+	return fmt.Sprintf("wlp2s0: `%s`", addrs["wlp2s0"][0])
 }
 
 func main() {
@@ -67,15 +58,19 @@ func main() {
 
 	scheduler := gocron.NewScheduler(time.UTC)
 
-	scheduler.Every(1).Hour().Do(func() {
+	// scheduler.Every(1).Hour().Do(func() {
+	scheduler.Every(1).Minute().Do(func() {
 		addrs, err := GetIfeces()
 		if err != nil {
 			fmt.Println(err)
 		}
-		if reflect.DeepEqual(MEMORY, addrs) {
-			msg := tgbotapi.NewMessage(*myID, formatAddr(addrs))
+
+		a := formatAddr(addrs)
+		if MEMORY != a {
+			msg := tgbotapi.NewMessage(*myID, a)
+			msg.ParseMode = "markdown"
 			bot.Send(msg)
-			MEMORY = addrs
+			MEMORY = a
 		}
 	})
 	scheduler.StartBlocking()
